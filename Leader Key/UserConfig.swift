@@ -129,7 +129,7 @@ class UserConfig: ObservableObject {
   }
 
   private func writeFile(data: Data) throws {
-    try data.write(to: url)
+    try data.write(to: url, options: .atomic)
   }
 
   private func readFile() throws -> String {
@@ -172,7 +172,8 @@ class UserConfig: ObservableObject {
         )
       }
     } catch {
-      handleError(error, critical: true)
+      handleError(error, critical: false)
+      return
     }
   }
 
