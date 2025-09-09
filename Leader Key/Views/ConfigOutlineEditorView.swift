@@ -485,7 +485,7 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
     labelButton.bezelStyle = .rounded
     labelButton.controlSize = .regular
     labelButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-    labelButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    labelButton.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
     do {  // Prefer label column width, but allow shrinking without conflicts
       let c = labelButton.widthAnchor.constraint(lessThanOrEqualToConstant: Layout.labelWidth)
       c.priority = .defaultHigh
@@ -874,7 +874,7 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     labelButton.bezelStyle = .rounded
     labelButton.controlSize = .regular
     labelButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-    labelButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    labelButton.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
     do {
       let c = labelButton.widthAnchor.constraint(lessThanOrEqualToConstant: Layout.labelWidth)
       c.priority = .defaultHigh
