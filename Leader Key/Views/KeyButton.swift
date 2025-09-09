@@ -103,31 +103,26 @@ struct KeyListenerView: NSViewRepresentable {
         return
       }
 
+      // Handle special behaviors first
       switch event.keyCode {
-      case 53:  // Escape key
+      case 53:  // Escape key - restore old value
         if let oldValue = oldValue {
           text.wrappedValue = oldValue.wrappedValue
         }
-      case 51, 117:  // Backspace or Delete
+        return
+      case 51, 117:  // Backspace or Delete - clear field
         text.wrappedValue = ""
-      case 36:  // Return/Enter key
-        text.wrappedValue = "↵"
-      case 126:  // Up arrow
-        text.wrappedValue = "↑"
-      case 125:  // Down arrow
-        text.wrappedValue = "↓"
-      case 123:  // Left arrow
-        text.wrappedValue = "←"
-      case 124:  // Right arrow
-        text.wrappedValue = "→"
-      case 48:  // Tab key
-        text.wrappedValue = "⇥"
-      case 49:  // Space key
-        text.wrappedValue = "␣"
+        return
       default:
-        if let characters = event.characters, !characters.isEmpty {
-          text.wrappedValue = String(characters.first!)
-        }
+        break
+      }
+
+      // Use centralized key mapping for all other keys
+      if let entry = KeyMaps.entry(for: event.keyCode) {
+        text.wrappedValue = entry.glyph
+      } else if let characters = event.characters, !characters.isEmpty {
+        // Fallback for unmapped keys
+        text.wrappedValue = String(characters.first!)
       }
 
       DispatchQueue.main.async {

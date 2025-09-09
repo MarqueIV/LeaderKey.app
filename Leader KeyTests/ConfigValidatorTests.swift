@@ -177,4 +177,62 @@ final class ConfigValidatorTests: XCTestCase {
       ConfigValidator.findItem(in: group, at: [0, 0]),
       "Should return nil when path goes through an action")
   }
+
+  // MARK: - Case Sensitivity Tests
+
+  func testCaseSensitiveKeyValidation() {
+    // Test that case-sensitive keys are treated as distinct
+    let group = Group(
+      key: nil,
+      label: "Test",
+      actions: [
+        .action(Action(key: "r", type: .application, value: "/Applications/Terminal.app")),
+        .action(Action(key: "R", type: .application, value: "/Applications/Finder.app")),
+        .action(Action(key: "h", type: .application, value: "/Applications/Calculator.app")),
+        .action(Action(key: "H", type: .application, value: "/Applications/TextEdit.app")),
+      ]
+    )
+
+    let errors = ConfigValidator.validate(group: group)
+
+    // Should have no errors since all keys are distinct (case-sensitive)
+    XCTAssertEqual(errors.count, 0, "Uppercase and lowercase keys should be treated as distinct")
+  }
+
+  func testKeyMapsDistinguishesCases() {
+    // Test that KeyMaps correctly handles both cases
+    XCTAssertNotNil(KeyMaps.byGlyph["r"])
+    XCTAssertNotNil(KeyMaps.byGlyph["R"])
+    XCTAssertNotEqual(KeyMaps.byGlyph["r"], KeyMaps.byGlyph["R"])
+
+    // Test normalization preserves case
+    XCTAssertEqual(KeyMaps.glyph(for: "r"), "r")
+    XCTAssertEqual(KeyMaps.glyph(for: "R"), "R")
+  }
+
+  func testKeyMatchingLogic() {
+    // Test the core key matching logic used in Controller.handleKey
+    let testCases: [(input: String, config: String, shouldMatch: Bool)] = [
+      ("r", "r", true),
+      ("R", "R", true),
+      ("r", "R", false),  // This was the bug - these should NOT match
+      ("R", "r", false),
+      ("h", "h", true),
+      ("H", "H", true),
+      ("h", "H", false),
+      ("H", "h", false),
+    ]
+
+    for testCase in testCases {
+      // Simulate the key normalization logic from Controller.handleKey
+      let actionKey = KeyMaps.glyph(for: testCase.config) ?? testCase.config
+      let inputKey = KeyMaps.glyph(for: testCase.input) ?? testCase.input
+      let matches = actionKey == inputKey
+
+      XCTAssertEqual(
+        matches, testCase.shouldMatch,
+        "Input '\(testCase.input)' vs config '\(testCase.config)' should \(testCase.shouldMatch ? "match" : "not match")"
+      )
+    }
+  }
 }

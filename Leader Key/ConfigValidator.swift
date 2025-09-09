@@ -55,23 +55,26 @@ class ConfigValidator {
 
       // Check for duplicates
       if let key = key, !key.isEmpty {
-        if let existingIndex = keysInGroup[key] {
+        // Normalize key to glyph representation for consistent comparison
+        let normalizedKey = KeyMaps.glyph(for: key) ?? key
+
+        if let existingIndex = keysInGroup[normalizedKey] {
           // Found a duplicate key
           let duplicatePath = path + [existingIndex]
           errors.append(
             ValidationError(
               path: duplicatePath,
-              message: "Multiple actions for the same key '\(key)'",
+              message: "Multiple actions for the same key '\(normalizedKey)'",
               type: .duplicateKey
             ))
           errors.append(
             ValidationError(
               path: currentPath,
-              message: "Multiple actions for the same key '\(key)'",
+              message: "Multiple actions for the same key '\(normalizedKey)'",
               type: .duplicateKey
             ))
         } else {
-          keysInGroup[key] = index
+          keysInGroup[normalizedKey] = index
         }
       }
     }
@@ -98,12 +101,26 @@ class ConfigValidator {
       return
     }
 
-    if key.count != 1 {
+    // Check if key is valid in our key mapping system
+    let entry = KeyMaps.entry(for: key) ?? KeyMaps.entry(forText: key)
+
+    if entry == nil && key.count != 1 {
       errors.append(
         ValidationError(
           path: path,
-          message: "Key must be a single character",
+          message: "Key must be a single character or a valid key name",
           type: .nonSingleCharacterKey
+        ))
+      return
+    }
+
+    // Check if key is reserved (only for non-root level)
+    if !path.isEmpty, let entry = entry, entry.isReserved {
+      errors.append(
+        ValidationError(
+          path: path,
+          message: "Key '\(key)' is reserved and cannot be bound",
+          type: .duplicateKey  // Reusing existing error type
         ))
     }
   }

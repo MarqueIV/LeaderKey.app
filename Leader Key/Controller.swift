@@ -140,11 +140,17 @@ class Controller {
     let hit = list?.actions.first { item in
       switch item {
       case .group(let group):
-        if group.key == key {
+        // Normalize both keys for comparison
+        let groupKey = KeyMaps.glyph(for: group.key ?? "") ?? group.key ?? ""
+        let inputKey = KeyMaps.glyph(for: key) ?? key
+        if groupKey == inputKey {
           return true
         }
       case .action(let action):
-        if action.key == key {
+        // Normalize both keys for comparison
+        let actionKey = KeyMaps.glyph(for: action.key ?? "") ?? action.key ?? ""
+        let inputKey = KeyMaps.glyph(for: key) ?? key
+        if actionKey == inputKey {
           return true
         }
       }
@@ -206,36 +212,21 @@ class Controller {
   }
 
   private func charForEvent(_ event: NSEvent) -> String? {
-    if Defaults[.forceEnglishKeyboardLayout] {
-      if let mapped = englishKeymap[event.keyCode] {
-        // Check if Shift is pressed and convert to uppercase if so
-        if event.modifierFlags.contains(.shift) {
-          return mapped.uppercased()
-        }
+    let code = event.keyCode
 
-        return mapped
+    // Check our centralized key map first
+    if let entry = KeyMaps.entry(for: code) {
+      // For letter keys, always respect shift modifier regardless of forceEnglishKeyboardLayout
+      if entry.glyph.first?.isLetter == true && !entry.isReserved {
+        let char = event.modifierFlags.contains(.shift) ? entry.glyph.uppercased() : entry.glyph
+        return char
       }
+      // For special keys (arrows, space, etc.), always return the glyph
+      return entry.glyph
     }
 
-    // Handle special keys
-    switch event.keyCode {
-    case KeyHelpers.enter.rawValue:
-      return "↵"
-    case KeyHelpers.upArrow.rawValue:
-      return "↑"
-    case KeyHelpers.downArrow.rawValue:
-      return "↓"
-    case KeyHelpers.leftArrow.rawValue:
-      return "←"
-    case KeyHelpers.rightArrow.rawValue:
-      return "→"
-    case KeyHelpers.tab.rawValue:
-      return "⇥"
-    case KeyHelpers.space.rawValue:
-      return "␣"
-    default:
-      return event.charactersIgnoringModifiers
-    }
+    // Fallback to system characters for unmapped keys
+    return event.charactersIgnoringModifiers
   }
 
   private func positionCheatsheetWindow() {

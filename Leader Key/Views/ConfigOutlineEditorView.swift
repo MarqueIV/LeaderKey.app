@@ -13,6 +13,7 @@ import UniformTypeIdentifiers
 struct ConfigOutlineEditorView: NSViewRepresentable {
   @Binding var root: Group
   var onChange: ((Group) -> Void)? = nil
+  @EnvironmentObject private var userConfig: UserConfig
 
   func makeNSView(context: Context) -> NSScrollView {
     let controller = OutlineController()
@@ -20,6 +21,7 @@ struct ConfigOutlineEditorView: NSViewRepresentable {
       onChange?(updatedRoot)
       root = updatedRoot
     }
+    controller.userConfig = userConfig
     context.coordinator.controller = controller
 
     let scroll = NSScrollView()
@@ -34,6 +36,7 @@ struct ConfigOutlineEditorView: NSViewRepresentable {
   }
 
   func updateNSView(_ nsView: NSScrollView, context: Context) {
+    context.coordinator.controller?.userConfig = userConfig
     context.coordinator.controller?.render(root: root)
   }
 
@@ -50,6 +53,7 @@ private class OutlineController: NSObject, NSOutlineViewDataSource, NSOutlineVie
   private let groupID = NSUserInterfaceItemIdentifier("GroupCell")
   private var rootNode: EditorNode = EditorNode.group(Group(key: nil, actions: []))
   var onChange: ((Group) -> Void)?
+  var userConfig: UserConfig?
   private var observers: [NSObjectProtocol] = []
   private var didApplyInitialExpansion = false
   private let expandedDefaultsKey = "ConfigOutlineEditor.ExpandedIndexPaths"
@@ -105,6 +109,9 @@ private class OutlineController: NSObject, NSOutlineViewDataSource, NSOutlineVie
     // Also load persisted paths (for fresh launches)
     let savedPaths = loadExpandedState() ?? Set<String>()
 
+    // Save scroll position before reload
+    let scrollPosition = outline.enclosingScrollView?.documentVisibleRect.origin ?? .zero
+
     rootNode = EditorNode.from(group: root)
     outline.reloadData()
 
@@ -117,6 +124,11 @@ private class OutlineController: NSObject, NSOutlineViewDataSource, NSOutlineVie
     }
     didApplyInitialExpansion = true
     lastRenderedRoot = root
+
+    // Restore scroll position after reload
+    DispatchQueue.main.async {
+      self.outline.enclosingScrollView?.documentView?.scroll(scrollPosition)
+    }
   }
 
   // MARK: DataSource
@@ -145,8 +157,10 @@ private class OutlineController: NSObject, NSOutlineViewDataSource, NSOutlineVie
       let cell =
         outlineView.makeView(withIdentifier: groupID, owner: self) as? GroupCellView
         ?? GroupCellView(identifier: groupID)
+      let path = indexPath(for: node) ?? []
       cell.configure(
         node: node,
+        validationError: userConfig?.validationError(at: path),
         onChange: { [weak self] payload in
           guard let self = self else { return }
           node.apply(payload)
@@ -186,8 +200,10 @@ private class OutlineController: NSObject, NSOutlineViewDataSource, NSOutlineVie
       let cell =
         outlineView.makeView(withIdentifier: actionID, owner: self) as? ActionCellView
         ?? ActionCellView(identifier: actionID)
+      let path = indexPath(for: node) ?? []
       cell.configure(
         node: node,
+        validationError: userConfig?.validationError(at: path),
         onChange: { [weak self] payload in
           guard let self = self else { return }
           node.apply(payload)
@@ -475,6 +491,7 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
     keyButton.bezelStyle = .rounded
     keyButton.controlSize = .regular
     keyButton.widthAnchor.constraint(equalToConstant: Layout.keyWidth).isActive = true
+    keyButton.wantsLayer = true
     typePopup.addItems(withTitles: ["Application", "URL", "Command", "Folder"])
     typePopup.controlSize = .regular
     typePopup.widthAnchor.constraint(equalToConstant: Layout.typeWidth).isActive = true
@@ -494,6 +511,7 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
     moreBtn.bezelStyle = .rounded
     moreBtn.controlSize = .regular
     moreBtn.image = NSImage(systemSymbolName: "ellipsis.circle", accessibilityDescription: nil)
+    moreBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
     iconButton.bezelStyle = .rounded
     iconButton.controlSize = .regular
     iconButton.imagePosition = .imageOnly
@@ -532,7 +550,8 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
   }
 
   func configure(
-    node: EditorNode, onChange: @escaping (EditorPayload) -> Void, onDelete: @escaping () -> Void,
+    node: EditorNode, validationError: ValidationErrorType? = nil,
+    onChange: @escaping (EditorPayload) -> Void, onDelete: @escaping () -> Void,
     onDuplicate: @escaping () -> Void
   ) {
     self.node = node
@@ -545,6 +564,7 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
     typePopup.selectItem(at: Self.index(for: action.type))
     rebuildValue(for: action)
     updateIcon(for: action)
+    updateValidationStyle(validationError)
   }
 
   private func showMoreMenu(anchor: NSView?) {
@@ -561,11 +581,26 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
   @objc private func handleDelete() { onDelete?() }
 
   private func updateButtons(for action: Action) {
-    keyButton.title = (action.key?.isEmpty ?? true) ? "Key" : (action.key ?? "Key")
+    keyButton.title =
+      (action.key?.isEmpty ?? true)
+      ? "Key" : (KeyMaps.glyph(for: action.key ?? "") ?? action.key ?? "Key")
     let isPlaceholder = (action.label?.isEmpty ?? true)
     setButtonTitle(
       labelButton, text: isPlaceholder ? "Label" : (action.label ?? "Label"),
       placeholder: isPlaceholder)
+  }
+
+  private func updateValidationStyle(_ error: ValidationErrorType?) {
+    if error != nil {
+      // Add subtle red border to indicate validation error
+      keyButton.layer?.borderColor = NSColor.systemRed.cgColor
+      keyButton.layer?.borderWidth = 1.0
+      keyButton.layer?.cornerRadius = 4.0
+    } else {
+      // Remove validation error styling
+      keyButton.layer?.borderColor = NSColor.clear.cgColor
+      keyButton.layer?.borderWidth = 0.0
+    }
   }
 
   private func rebuildValue(for action: Action) {
@@ -711,6 +746,12 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
         self.endKeyCapture(set: nil)
         return nil
       }
+      // Use KeyMap system for consistent key representation
+      if let entry = KeyMaps.entry(for: event.keyCode) {
+        self.endKeyCapture(set: entry.glyph)
+        return nil
+      }
+      // Fallback for unmapped keys
       let chars = event.charactersIgnoringModifiers ?? event.characters ?? ""
       if let ch = chars.first {
         self.endKeyCapture(set: String(ch))
@@ -866,6 +907,7 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     keyButton.bezelStyle = .rounded
     keyButton.controlSize = .regular
     keyButton.widthAnchor.constraint(equalToConstant: Layout.keyWidth).isActive = true
+    keyButton.wantsLayer = true
     iconButton.bezelStyle = .rounded
     iconButton.controlSize = .regular
     iconButton.imagePosition = .imageOnly
@@ -890,6 +932,7 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     moreBtn.bezelStyle = .rounded
     moreBtn.controlSize = .regular
     moreBtn.image = NSImage(systemSymbolName: "ellipsis.circle", accessibilityDescription: nil)
+    moreBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
 
     let spacer2 = NSView()
     spacer2.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -933,7 +976,8 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
   }
 
   func configure(
-    node: EditorNode, onChange: @escaping (EditorPayload) -> Void, onDelete: @escaping () -> Void,
+    node: EditorNode, validationError: ValidationErrorType? = nil,
+    onChange: @escaping (EditorPayload) -> Void, onDelete: @escaping () -> Void,
     onDuplicate: @escaping () -> Void, onAddAction: @escaping () -> Void,
     onAddGroup: @escaping () -> Void
   ) {
@@ -946,15 +990,31 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     guard case .group(let group) = node.kind else { return }
     updateButtons(for: group)
     updateIcon(for: group)
+    updateValidationStyle(validationError)
   }
 
   private func updateButtons(for group: Group) {
-    keyButton.title = (group.key?.isEmpty ?? true) ? "Group Key" : (group.key ?? "Group Key")
+    keyButton.title =
+      (group.key?.isEmpty ?? true)
+      ? "Group Key" : (KeyMaps.glyph(for: group.key ?? "") ?? group.key ?? "Group Key")
     let isPlaceholder = (group.label?.isEmpty ?? true)
     setButtonTitle(
       labelButton, text: isPlaceholder ? "Label" : (group.label ?? "Label"),
       placeholder: isPlaceholder)
     updateGlobalShortcutView(for: group)
+  }
+
+  private func updateValidationStyle(_ error: ValidationErrorType?) {
+    if error != nil {
+      // Add subtle red border to indicate validation error
+      keyButton.layer?.borderColor = NSColor.systemRed.cgColor
+      keyButton.layer?.borderWidth = 1.0
+      keyButton.layer?.cornerRadius = 4.0
+    } else {
+      // Remove validation error styling
+      keyButton.layer?.borderColor = NSColor.clear.cgColor
+      keyButton.layer?.borderWidth = 0.0
+    }
   }
 
   private func updateGlobalShortcutView(for group: Group) {
@@ -967,7 +1027,8 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     let hasValidKey = group.key != nil && !group.key!.isEmpty
 
     if isFirstLevel && hasValidKey, let key = group.key {
-      let recorder = KeyboardShortcuts.RecorderCocoa(for: KeyboardShortcuts.Name("group-\(key)")) { _ in
+      let recorder = KeyboardShortcuts.RecorderCocoa(for: KeyboardShortcuts.Name("group-\(key)")) {
+        _ in
         // Update the groupShortcuts set when shortcut changes
         let shortcutName = KeyboardShortcuts.Name("group-\(key)")
         if KeyboardShortcuts.getShortcut(for: shortcutName) != nil {
@@ -1019,6 +1080,12 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
         self.endKeyCapture(set: nil)
         return nil
       }
+      // Use KeyMap system for consistent key representation
+      if let entry = KeyMaps.entry(for: event.keyCode) {
+        self.endKeyCapture(set: entry.glyph)
+        return nil
+      }
+      // Fallback for unmapped keys
       let chars = event.charactersIgnoringModifiers ?? event.characters ?? ""
       if let ch = chars.first {
         self.endKeyCapture(set: String(ch))
@@ -1354,7 +1421,6 @@ extension Notification.Name {
   static let lkCollapseAll = Notification.Name("LKCollapseAll")
   static let lkSortAZ = Notification.Name("LKSortAZ")
 }
-
 
 // MARK: - NSWindowDelegate for symbol sheets
 extension ActionCellView {
