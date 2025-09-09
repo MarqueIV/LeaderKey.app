@@ -497,16 +497,12 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
     typePopup.widthAnchor.constraint(equalToConstant: Layout.typeWidth).isActive = true
     valueStack.orientation = .horizontal
     valueStack.spacing = 6
-    valueStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
-    valueStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
     labelButton.bezelStyle = .rounded
     labelButton.controlSize = .regular
-    labelButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-    labelButton.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-    do {  // Prefer label column width, but allow shrinking without conflicts
-      let c = labelButton.widthAnchor.constraint(lessThanOrEqualToConstant: Layout.labelWidth)
-      c.priority = .defaultHigh
-      c.isActive = true
+    do {  // Ensure minimum width to prevent text from being cut off
+      let minConstraint = labelButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 60)
+      minConstraint.priority = .required
+      minConstraint.isActive = true
     }
     moreBtn.bezelStyle = .rounded
     moreBtn.controlSize = .regular
@@ -518,10 +514,13 @@ private class ActionCellView: NSTableCellView, NSWindowDelegate {
     iconButton.imageScaling = .scaleProportionallyDown
     iconButton.widthAnchor.constraint(equalToConstant: Layout.iconButtonWidth).isActive = true
 
-    let spacer = NSView()
-    spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-    spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-    for view in [keyButton, typePopup, iconButton, valueStack, spacer, labelButton, moreBtn] {
+    for view in [keyButton, typePopup, iconButton, labelButton, moreBtn] {
+      view.makeRigid()
+    }
+
+    valueStack.makeFlex()
+
+    for view in [keyButton, typePopup, iconButton, valueStack, labelButton, moreBtn] {
       container.addArrangedSubview(view)
     }
     addSubview(container)
@@ -915,13 +914,6 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     iconButton.widthAnchor.constraint(equalToConstant: Layout.iconButtonWidth).isActive = true
     labelButton.bezelStyle = .rounded
     labelButton.controlSize = .regular
-    labelButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-    labelButton.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-    do {
-      let c = labelButton.widthAnchor.constraint(lessThanOrEqualToConstant: Layout.labelWidth)
-      c.priority = .defaultHigh
-      c.isActive = true
-    }
 
     addActionBtn.title = "+ Action"
     addActionBtn.bezelStyle = .rounded
@@ -935,19 +927,26 @@ private class GroupCellView: NSTableCellView, NSWindowDelegate {
     moreBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
 
     let spacer2 = NSView()
-    spacer2.setContentHuggingPriority(.defaultLow, for: .horizontal)
-    spacer2.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-    for v in [keyButton, iconButton] {
-      container.addArrangedSubview(v)
-    }
 
-    // Add placeholder for global shortcut view
     let globalShortcutContainer = NSView()
     globalShortcutContainer.widthAnchor.constraint(
       equalToConstant: Layout.globalShortcutWidth
     ).isActive = true
-    container.addArrangedSubview(globalShortcutContainer)
     globalShortcutView = globalShortcutContainer
+
+    for view in [
+      keyButton, iconButton, addActionBtn, addGroupBtn, labelButton, moreBtn,
+      globalShortcutContainer,
+    ] {
+      view.makeRigid()
+    }
+
+    spacer2.makeFlex()
+
+    for v in [keyButton, iconButton] {
+      container.addArrangedSubview(v)
+    }
+    container.addArrangedSubview(globalShortcutContainer)
 
     for v in [spacer2, addActionBtn, addGroupBtn, labelButton, moreBtn] {
       container.addArrangedSubview(v)
@@ -1437,5 +1436,22 @@ extension GroupCellView {
     symbolWindow = nil
     symbolParent = nil
     return true
+  }
+}
+
+extension NSView {
+  fileprivate func makeFlex() {
+    setContentHuggingPriority(.init(10), for: .horizontal)
+    setContentCompressionResistancePriority(.init(10), for: .horizontal)
+  }
+
+  fileprivate func makeSoft() {
+    setContentHuggingPriority(.defaultLow, for: .horizontal)  // 250
+    setContentCompressionResistancePriority(.defaultLow, for: .horizontal)  // 250
+  }
+
+  fileprivate func makeRigid() {
+    setContentHuggingPriority(.defaultHigh, for: .horizontal)  // 750
+    setContentCompressionResistancePriority(.init(999), for: .horizontal)
   }
 }
