@@ -99,10 +99,10 @@ final class UserConfigTests: XCTestCase {
 
     XCTAssertEqual(subject.root, emptyRoot)
     XCTAssertGreaterThan(testAlertManager.shownAlerts.count, 0)
-    // Verify that at least one critical alert was shown
+    // Verify that at least one warning alert was shown (JSON parsing errors are non-critical)
     XCTAssertTrue(
       testAlertManager.shownAlerts.contains { alert in
-        alert.style == .critical
+        alert.style == .warning
       })
   }
 }
