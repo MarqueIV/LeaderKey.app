@@ -29,6 +29,23 @@ struct GeneralPane: View {
           HStack {
             // Left-aligned buttons
             HStack(spacing: 8) {
+              Button(action: {
+                config.root.actions.append(.action(Action(key: "", type: .application, value: "")))
+              }) {
+                Image(systemName: "rays")
+                Text("Add Action")
+              }
+
+              Button(action: {
+                config.root.actions.append(.group(Group(key: "", actions: [])))
+              }) {
+                Image(systemName: "folder")
+                Text("Add Group")
+              }
+
+              Divider()
+                .frame(height: 20)
+
               Button("Save to file") {
                 config.saveConfig()
               }
@@ -46,21 +63,21 @@ struct GeneralPane: View {
                 NotificationCenter.default.post(name: .lkExpandAll, object: nil)
               }) {
                 Image(systemName: "chevron.down")
-                Text("Expand all")
+                Text("All")
               }
 
               Button(action: {
                 NotificationCenter.default.post(name: .lkCollapseAll, object: nil)
               }) {
                 Image(systemName: "chevron.right")
-                Text("Collapse all")
+                Text("All")
               }
 
               Button(action: {
                 NotificationCenter.default.post(name: .lkSortAZ, object: nil)
               }) {
                 Image(systemName: "arrow.up.arrow.down")
-                Text("Sort A → Z")
+                Text("Sort")
               }
             }
           }
