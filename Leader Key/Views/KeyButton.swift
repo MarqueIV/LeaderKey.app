@@ -93,41 +93,26 @@ struct KeyListenerView: NSViewRepresentable {
 
     override var acceptsFirstResponder: Bool { true }
 
-    override func viewDidMoveToWindow() {
-      super.viewDidMoveToWindow()
-    }
-
     override func keyDown(with event: NSEvent) {
       guard let isListening = isListening, let text = text, isListening.wrappedValue else {
         super.keyDown(with: event)
         return
       }
 
-      // Handle special behaviors first
-      switch event.keyCode {
-      case 53:  // Escape key - restore old value
-        if let oldValue = oldValue {
-          text.wrappedValue = oldValue.wrappedValue
+      let handled = KeyCapture.handle(
+        event: event,
+        onSet: { value in text.wrappedValue = value ?? "" },
+        onCancel: { if let oldValue = self.oldValue { text.wrappedValue = oldValue.wrappedValue } },
+        onClear: { text.wrappedValue = "" }
+      )
+
+      if handled {
+        DispatchQueue.main.async {
+          isListening.wrappedValue = false
+          self.onKeyChanged?(self.oldValue?.wrappedValue, self.text?.wrappedValue)
         }
-        return
-      case 51, 117:  // Backspace or Delete - clear field
-        text.wrappedValue = ""
-        return
-      default:
-        break
-      }
-
-      // Use centralized key mapping for all other keys
-      if let entry = KeyMaps.entry(for: event.keyCode) {
-        text.wrappedValue = entry.glyph
-      } else if let characters = event.characters, !characters.isEmpty {
-        // Fallback for unmapped keys
-        text.wrappedValue = String(characters.first!)
-      }
-
-      DispatchQueue.main.async {
-        isListening.wrappedValue = false
-        self.onKeyChanged?(self.oldValue?.wrappedValue, self.text?.wrappedValue)
+      } else {
+        super.keyDown(with: event)
       }
     }
 

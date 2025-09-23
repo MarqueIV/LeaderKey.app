@@ -36,7 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate,
           AdvancedPane().environmentObject(self.config)
         }),
     ],
-    style: .segmentedControl
+    style: .segmentedControl,
   )
 
   func applicationDidFinishLaunching(_: Notification) {
@@ -147,7 +147,7 @@ class AppDelegate: NSObject, NSApplicationDelegate,
 
   // MARK: - Sparkle Gentle Reminders
 
-  var supportsGentleScheduledUpdateReminders: Bool {
+  @objc var supportsGentleScheduledUpdateReminders: Bool {
     return true
   }
 
