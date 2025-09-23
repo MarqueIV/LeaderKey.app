@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		115AA5BF2DA521C600C17E18 /* ActionIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115AA5BE2DA521C200C17E18 /* ActionIcon.swift */; };
-		6D9B9C042DBA000000000002 /* KeyCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B9C032DBA000000000002 /* KeyCapture.swift */; };
-		6D9B9C062DBA000000000003 /* ConfigEditorShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B9C052DBA000000000003 /* ConfigEditorShared.swift */; };
 		115AA5C22DA546D500C17E18 /* SymbolPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 115AA5C12DA546D500C17E18 /* SymbolPicker */; };
 		130196C62D73B3DE0093148B /* Breadcrumbs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130196C52D73B3DC0093148B /* Breadcrumbs.swift */; };
 		423632222D68CA6500878D92 /* MysteryBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423632212D68CA6500878D92 /* MysteryBox.swift */; };
@@ -53,6 +51,8 @@
 		605385A32D523CAD00BEDB4B /* Pulsate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 605385A22D523CAD00BEDB4B /* Pulsate.swift */; };
 		606C56EF2DAB875A00198B9F /* Cheater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606C56EE2DAB875A00198B9F /* Cheater.swift */; };
 		6D9B9C012DBA000000000001 /* ConfigOutlineEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B9C002DBA000000000001 /* ConfigOutlineEditorView.swift */; };
+		6D9B9C042DBA000000000002 /* KeyCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B9C032DBA000000000002 /* KeyCapture.swift */; };
+		6D9B9C062DBA000000000003 /* ConfigEditorShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B9C052DBA000000000003 /* ConfigEditorShared.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -598,7 +598,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 152;
+				CURRENT_PROJECT_VERSION = 155;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Leader Key/Support/Preview Content\"";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -616,7 +616,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.17.2;
+				MARKETING_VERSION = 1.17.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.brnbw.Leader-Key";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -634,7 +634,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 152;
+				CURRENT_PROJECT_VERSION = 155;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Leader Key/Support/Preview Content\"";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -652,7 +652,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.17.2;
+				MARKETING_VERSION = 1.17.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.brnbw.Leader-Key";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -665,7 +665,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 152;
+				CURRENT_PROJECT_VERSION = 155;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
@@ -683,7 +683,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 152;
+				CURRENT_PROJECT_VERSION = 155;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
