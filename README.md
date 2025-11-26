@@ -47,6 +47,58 @@ $ brew install leader-key
 - <kbd>leader</kbd><kbd>m</kbd><kbd>m</kbd> → Mute audio (`media mute`)
 - <kbd>leader</kbd><kbd>w</kbd><kbd>m</kbd> → Maximize current window (`window maximize`)
 
+## URL Scheme
+
+Leader Key supports URL scheme automation for integration with tools like Alfred, Raycast, shell scripts, and more.
+
+### Available URL Schemes
+
+#### Configuration Management
+```bash
+# Reload configuration from disk
+open "leaderkey://config-reload"
+
+# Show config.json in Finder
+open "leaderkey://config-reveal"
+```
+
+#### Window Control
+```bash
+# Show Leader Key window
+open "leaderkey://activate"
+
+# Hide Leader Key window
+open "leaderkey://hide"
+
+# Clear navigation state (return to root)
+open "leaderkey://reset"
+```
+
+#### Settings & Info
+```bash
+# Open settings window
+open "leaderkey://settings"
+
+# Show about dialog
+open "leaderkey://about"
+```
+
+#### Navigation
+```bash
+# Navigate through keys and execute actions
+open "leaderkey://navigate?keys=a,b,c"
+
+# Navigate without executing (preview mode)
+open "leaderkey://navigate?keys=a,b,c&execute=false"
+```
+
+### Example Use Cases
+
+- **Alfred/Raycast workflows**: Trigger Leader Key shortcuts programmatically
+- **Shell scripts**: Automate configuration reloads after editing config.json
+- **Keyboard maestro**: Chain Leader Key actions with other automations
+- **External triggers**: Open specific action sequences from other applications
+
 ## FAQ
 
 #### What do I set as my Leader Key?

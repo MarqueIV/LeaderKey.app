@@ -127,7 +127,7 @@ class Controller {
     }
   }
 
-  func handleKey(_ key: String, withModifiers modifiers: NSEvent.ModifierFlags? = nil) {
+  func handleKey(_ key: String, withModifiers modifiers: NSEvent.ModifierFlags? = nil, execute: Bool = true) {
     if key == "?" {
       showCheatsheet()
       return
@@ -159,15 +159,18 @@ class Controller {
 
     switch hit {
     case .action(let action):
-      if let mods = modifiers, isInStickyMode(mods) {
-        runAction(action)
-      } else {
-        hide {
-          self.runAction(action)
+      if execute {
+        if let mods = modifiers, isInStickyMode(mods) {
+          runAction(action)
+        } else {
+          hide {
+            self.runAction(action)
+          }
         }
       }
+      // If execute is false, just stay visible showing the matched action
     case .group(let group):
-      if let mods = modifiers, shouldRunGroupSequenceWithModifiers(mods) {
+      if execute, let mods = modifiers, shouldRunGroupSequenceWithModifiers(mods) {
         hide {
           self.runGroup(group)
         }

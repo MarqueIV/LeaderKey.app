@@ -218,33 +218,37 @@ class AppDelegate: NSObject, NSApplicationDelegate,
   }
 
   private func handleURL(_ url: URL) {
-    guard url.scheme == "leaderkey" else { return }
+    let action = URLSchemeHandler.parse(url)
 
-    if url.host == "settings" {
+    switch action {
+    case .settings:
       showSettings()
-      return
-    }
-    if url.host == "about" {
+    case .about:
       NSApp.orderFrontStandardAboutPanel(nil)
+    case .configReload:
+      config.reloadFromFile()
+    case .configReveal:
+      NSWorkspace.shared.selectFile(config.path, inFileViewerRootedAtPath: "")
+    case .activate:
+      activate()
+    case .hide:
+      hide()
+    case .reset:
+      state.clear()
+    case .navigate(let keys, let execute):
+      show()
+      processKeys(keys, execute: execute)
+    case .show:
+      show()
+    case .invalid:
       return
-    }
-
-    show()
-
-    if url.host == "navigate",
-      let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-      let queryItems = components.queryItems,
-      let keysParam = queryItems.first(where: { $0.name == "keys" })?.value
-    {
-      let keys = keysParam.split(separator: ",").map(String.init)
-      processKeys(keys)
     }
   }
 
-  private func processKeys(_ keys: [String]) {
+  private func processKeys(_ keys: [String], execute: Bool = true) {
     guard !keys.isEmpty else { return }
 
-    controller.handleKey(keys[0])
+    controller.handleKey(keys[0], execute: execute)
 
     if keys.count > 1 {
       let remainingKeys = Array(keys.dropFirst())
@@ -252,7 +256,7 @@ class AppDelegate: NSObject, NSApplicationDelegate,
       var delayMs = 100
       for key in remainingKeys {
         delay(delayMs) { [weak self] in
-          self?.controller.handleKey(key)
+          self?.controller.handleKey(key, execute: execute)
         }
         delayMs += 100
       }
