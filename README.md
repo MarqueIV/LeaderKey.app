@@ -1,3 +1,13 @@
+# NB: Leader Key has been surpassed by [Tuna](https://tunaformac.com)
+
+Tuna is a complete launcher – much more capable, and with **Leader Key built in!**
+
+[![Meet Tuna](https://img.youtube.com/vi/vkm-ZFlivyI/mqdefault.jpg)](https://www.youtube.com/watch?v=vkm-ZFlivyI)
+
+[Leader Key will stay free and open source](https://github.com/mikker/LeaderKey/discussions/314#discussioncomment-15939059) but my focus will be on Tuna going forward. 
+
+---
+  
 <img src="https://s3.brnbw.com/icon_1024-akc2Ij3q9JOyhQ6Y7Lz6AFkX6nQQFhrQaRPqbV4vor0A62EA0vq4xOGrXpg6PVKi3aUJxOAyItkyktblPtZD4K4oYZ1bJVdh96VE.png" width="256" height="256" alt="Leader Key.app" />
 
 **The \*faster than your launcher\* launcher**
